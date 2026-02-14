@@ -4,375 +4,598 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Existence: 200 OK — Proof-of-Life Demo</title>
+
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 28px; max-width: 980px; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin: 12px 0; }
-    .row { display:flex; gap:16px; flex-wrap: wrap; align-items: center; }
-    .btn { padding:10px 12px; border-radius:10px; border:1px solid #888; background:#fff; cursor:pointer; }
-    .btn:disabled { opacity:0.5; cursor:not-allowed; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-    .ok { color: #0a7; font-weight: 600; }
-    .bad { color: #b20; font-weight: 600; }
-    input[type=range] { width: 360px; }
-    .small { font-size: 13px; color: #444; }
-    .pill { display:inline-block; padding:4px 8px; border-radius: 999px; border: 1px solid #ccc; font-size: 12px; }
+    /* ===== Antigravity / Matrix Theme (adapted to your original IDs/classes) ===== */
+
+    :root{
+      --g: #0f0;
+      --g2:#0a0;
+      --bg:#000;
+      --panel: rgba(0, 0, 0, 0.85);
+      --panel2: rgba(0, 20, 0, 0.60);
+      --border: #050;
+      --border2:#0a0;
+      --red:#f00;
+      --muted:#0a0;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--g);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    /* Matrix canvas */
+    canvas#matrix-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.8;
+    }
+
+    /* Main centered container (replaces your old max-width body) */
+    .main-container{
+      background: var(--panel);
+      padding: 2vh 2vw;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,255,0,0.10);
+      width: 95%;
+      max-width: 980px;
+      height: 95vh;
+      border: 1px solid var(--border2);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    /* Custom scrollbar */
+    .main-container::-webkit-scrollbar { width: 8px; }
+    .main-container::-webkit-scrollbar-track { background: #000; border-left: 1px solid #050; }
+    .main-container::-webkit-scrollbar-thumb { background: #0a0; border-radius: 0; box-shadow: 0 0 6px #0f0; }
+    .main-container::-webkit-scrollbar-thumb:hover { background: #0f0; box-shadow: 0 0 12px #0f0; }
+
+    header{
+      text-align:center;
+      border-bottom: 2px solid var(--border2);
+      padding-bottom: 1vh;
+      margin-bottom: 1vh;
+      flex-shrink: 0;
+    }
+
+    h1{
+      margin: 0;
+      font-size: 2rem;
+      color: var(--g);
+      text-shadow: 0 0 10px var(--g);
+      letter-spacing: 2px;
+    }
+
+    /* Your original small text */
+    .small { font-size: 0.9rem; color: var(--muted); margin: 6px 0 0 0; }
+
+    /* Your original .card now becomes a “verification-layer” look */
+    .card{
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: inset 0 0 15px rgba(0,100,0,0.08);
+      padding: 16px;
+      margin: 12px 0;
+      position: relative;
+    }
+
+    /* Section titles */
+    h2{
+      font-size: 1.15rem;
+      margin: 0 0 10px 0;
+      color: var(--g);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px dashed #030;
+      padding-bottom: 8px;
+    }
+
+    /* Layout row */
+    .row{
+      display:flex;
+      gap:16px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    /* Buttons */
+    .btn{
+      background: rgba(0, 40, 0, 0.3);
+      color: var(--g);
+      border: 1px solid var(--border2);
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-radius: 2px;
+    }
+
+    .btn:hover{
+      background: rgba(0, 100, 0, 0.5);
+      box-shadow: 0 0 10px var(--g);
+    }
+
+    .btn:disabled{
+      border-color: #333;
+      color: #555;
+      background: transparent;
+      box-shadow: none;
+      cursor: not-allowed;
+      opacity: 0.75;
+    }
+
+    /* Range styling (keep it visible on dark background) */
+    input[type=range]{
+      width: 360px;
+      accent-color: var(--g);
+    }
+
+    /* Monospace token / session lines */
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+      word-break: break-all;
+    }
+
+    /* Status colors */
+    .ok { color: var(--g); font-weight: 700; text-shadow: 0 0 8px rgba(0,255,0,0.35); }
+    .bad { color: var(--red); font-weight: 700; text-shadow: 0 0 10px rgba(255,0,0,0.25); }
+
+    /* Pills */
+    .pill{
+      display:inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid #030;
+      background: #001100;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* Make hidden cards not consume space */
+    [style*="display:none"]{ display:none !important; }
+
+    /* Tighten paragraphs in cards */
+    .card p { margin: 8px 0 10px 0; color: var(--muted); }
+
+    /* Make the “Final Output token” block look terminal */
+    #tokenOut .mono{
+      display:block;
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #030;
+      background: rgba(0, 10, 0, 0.40);
+    }
   </style>
 </head>
+
 <body>
-  <h1>Existence: 200 OK</h1>
-  <p class="small">Real-time Proof-of-Life (Hackathon build). No ML. Server-enforced replay resistance.</p>
+  <canvas id="matrix-bg"></canvas>
 
-  <div class="card">
-    <div class="row">
-      <button id="btnStart" class="btn">Start Session</button>
-      <span id="sessionInfo" class="mono small"></span>
+  <div class="main-container">
+    <header>
+      <h1>Existence: 200 OK</h1>
+      <p class="small">Real-time Proof-of-Life (Hackathon build). No ML. Server-enforced replay resistance.</p>
+    </header>
+
+    <!-- ===== YOUR ORIGINAL HTML (UNCHANGED) ===== -->
+    <div class="card">
+      <div class="row">
+        <button id="btnStart" class="btn">Start Session</button>
+        <span id="sessionInfo" class="mono small"></span>
+      </div>
     </div>
-  </div>
 
-  <div class="card" id="layer1Card" style="display:none;">
-    <h2>Layer 1 — Quick Bot Filter (Volume)</h2>
-    <p>Set the volume slider to exactly <span id="targetVal" class="mono"></span>% (one attempt).</p>
-    <div class="row">
-      <input id="vol" type="range" min="0" max="100" value="50"/>
-      <span>Value: <span id="volVal" class="mono">50</span>%</span>
-      <button id="btnL1Submit" class="btn">Submit</button>
+    <div class="card" id="layer1Card" style="display:none;">
+      <h2>Layer 1 — Quick Bot Filter (Volume)</h2>
+      <p>Set the volume slider to exactly <span id="targetVal" class="mono"></span>% (one attempt).</p>
+      <div class="row">
+        <input id="vol" type="range" min="0" max="100" value="50"/>
+        <span class="small">Value: <span id="volVal" class="mono">50</span>%</span>
+        <button id="btnL1Submit" class="btn">Submit</button>
+      </div>
+      <div id="l1Out" class="small"></div>
     </div>
-    <div id="l1Out" class="small"></div>
-  </div>
 
-  <div class="card" id="layer2Card" style="display:none;">
-    <h2>Layer 2 — Beep-Click</h2>
-    <p>When you hear the beep, click <b>NOW</b>.</p>
-    <div class="row">
-      <button id="btnArmBeep" class="btn">Arm Challenge</button>
-      <button id="btnNow" class="btn" disabled>NOW</button>
-      <span id="l2Timer" class="mono small"></span>
+    <div class="card" id="layer2Card" style="display:none;">
+      <h2>Layer 2 — Beep-Click</h2>
+      <p>When you hear the beep, click <b>NOW</b>.</p>
+      <div class="row">
+        <button id="btnArmBeep" class="btn">Arm Challenge</button>
+        <button id="btnNow" class="btn" disabled>NOW</button>
+        <span id="l2Timer" class="mono small"></span>
+      </div>
+      <div id="l2Out" class="small"></div>
     </div>
-    <div id="l2Out" class="small"></div>
-  </div>
 
-  <div class="card" id="layer35Card" style="display:none;">
-    <h2>Layer 3.5 — Speak Phrase</h2>
-    <p>Speak this phrase after it flashes: <span id="phraseFlash" class="mono"></span></p>
-    <div class="row">
-      <button id="btnShowPhrase" class="btn">Show Phrase (2s)</button>
-      <button id="btnStartSpeech" class="btn" disabled>Start Speech Recognition</button>
+    <div class="card" id="layer35Card" style="display:none;">
+      <h2>Layer 3.5 — Speak Phrase</h2>
+      <p>Speak this phrase after it flashes: <span id="phraseFlash" class="mono"></span></p>
+      <div class="row">
+        <button id="btnShowPhrase" class="btn">Show Phrase (2s)</button>
+        <button id="btnStartSpeech" class="btn" disabled>Start Speech Recognition</button>
+      </div>
+      <div id="l35Out" class="small"></div>
     </div>
-    <div id="l35Out" class="small"></div>
-  </div>
 
-  <div class="card" id="finalCard" style="display:none;">
-    <h2>Final Output</h2>
-    <button id="btnFinalize" class="btn">Issue Proof-of-Life Token</button>
-    <div id="tokenOut" class="small"></div>
-    <div class="row" style="margin-top:10px;">
-      <button id="btnConsume1" class="btn" disabled>Consume Token (1st)</button>
-      <button id="btnConsume2" class="btn" disabled>Consume Token (Replay)</button>
+    <div class="card" id="finalCard" style="display:none;">
+      <h2>Final Output</h2>
+      <button id="btnFinalize" class="btn">Issue Proof-of-Life Token</button>
+      <div id="tokenOut" class="small"></div>
+      <div class="row" style="margin-top:10px;">
+        <button id="btnConsume1" class="btn" disabled>Consume Token (1st)</button>
+        <button id="btnConsume2" class="btn" disabled>Consume Token (Replay)</button>
+      </div>
+      <div id="consumeOut" class="small"></div>
     </div>
-    <div id="consumeOut" class="small"></div>
-  </div>
 
-<script>
-  let sessionId = null;
-  let l1Target = null;
+    <!-- ===== YOUR ORIGINAL JS (UNCHANGED) ===== -->
+    <script>
+      let sessionId = null;
+      let l1Target = null;
 
-  let l2 = { nonce: null, beepAt: null, tol: null, armedAtPerf: null, clickAt: null, beepPerf: null, armed: false };
-  let l35 = { enabled: false, nonce: null, words: null };
+      let l2 = { nonce: null, beepAt: null, tol: null, armedAtPerf: null, clickAt: null, beepPerf: null, armed: false };
+      let l35 = { enabled: false, nonce: null, words: null };
 
-  // Layer1 tracking
-  let l1Start = null;
-  let moveCount = 0;
-  let l1Submitted = false;
+      // Layer1 tracking
+      let l1Start = null;
+      let moveCount = 0;
+      let l1Submitted = false;
 
-  const $ = (id) => document.getElementById(id);
+      const $ = (id) => document.getElementById(id);
 
-  function setText(id, txt) { $(id).textContent = txt; }
-  function show(id) { $(id).style.display = ""; }
-  function hide(id) { $(id).style.display = "none"; }
+      function setText(id, txt) { $(id).textContent = txt; }
+      function show(id) { $(id).style.display = ""; }
+      function hide(id) { $(id).style.display = "none"; }
 
-  async function postJson(url, body) {
-    const r = await fetch(url, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify(body)
-    });
-    const data = await r.json().catch(()=>({}));
-    if (!r.ok) throw { status: r.status, data };
-    return data;
-  }
-
-  $("btnStart").onclick = async () => {
-    $("btnStart").disabled = true;
-    $("sessionInfo").textContent = "starting...";
-    try {
-      const data = await postJson("/api/start", {});
-      sessionId = data.session_id;
-      l1Target = data.layer1_target;
-
-      setText("sessionInfo", `session_id=${sessionId}  ttl=${data.session_expires_in}s`);
-      show("layer1Card");
-      hide("layer2Card");
-      hide("layer35Card");
-      hide("finalCard");
-
-      // reset L1
-      l1Start = performance.now();
-      moveCount = 0;
-      l1Submitted = false;
-
-      setText("targetVal", l1Target);
-      $("l1Out").textContent = "";
-      $("vol").value = 50;
-      setText("volVal", "50");
-      $("btnL1Submit").disabled = false;
-
-    } catch (e) {
-      $("sessionInfo").textContent = "start failed";
-      console.error(e);
-      $("btnStart").disabled = false;
-    }
-  };
-
-  $("vol").addEventListener("input", () => {
-    setText("volVal", $("vol").value);
-    if (!l1Submitted) moveCount++;
-  });
-
-  $("btnL1Submit").onclick = async () => {
-    if (l1Submitted) return;
-    l1Submitted = true;
-    $("btnL1Submit").disabled = true;
-
-    const timeMs = Math.round(performance.now() - l1Start);
-    const payload = {
-      time_ms: timeMs,
-      final_val: parseInt($("vol").value, 10),
-      target_val: l1Target,
-      moves: moveCount
-    };
-
-    try {
-      const data = await postJson(`/api/${sessionId}/layer1`, payload);
-
-      const risk = data.risk;
-      $("l1Out").innerHTML =
-        `Risk: <span class="pill">${risk.label}</span> (score=${risk.score.toFixed(2)}) &nbsp; ` +
-        `Strictness: <span class="pill">${data.strictness}</span>`;
-
-      // prepare layer2
-      l2.nonce = data.layer2.nonce;
-      l2.beepAt = data.layer2.params.beep_at_ms;
-      l2.tol = data.layer2.params.tolerance_ms;
-      l2.armed = false;
-      l2.clickAt = null;
-      l2.beepPerf = null;
-      l2.armedAtPerf = null;
-
-      $("l2Out").textContent = `Server tolerance: ±${l2.tol}ms.`;
-      $("btnArmBeep").disabled = false;
-      $("btnNow").disabled = true;
-      setText("l2Timer", "");
-      show("layer2Card");
-
-      // layer3.5 toggle
-      l35.enabled = data.layer35.enabled;
-      l35.nonce = data.layer35.nonce;
-      l35.words = data.layer35.words;
-
-      if (l35.enabled) {
-        show("layer35Card");
-        $("l35Out").textContent = "Phrase challenge is enabled due to risk/strictness.";
-        $("btnShowPhrase").disabled = false;
-        $("btnStartSpeech").disabled = true;
-        setText("phraseFlash", "•••");
-      } else {
-        hide("layer35Card");
+      async function postJson(url, body) {
+        const r = await fetch(url, {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify(body)
+        });
+        const data = await r.json().catch(()=>({}));
+        if (!r.ok) throw { status: r.status, data };
+        return data;
       }
 
-    } catch (e) {
-      $("l1Out").innerHTML = `<span class="bad">Layer1 failed:</span> ${JSON.stringify(e.data)}`;
-      console.error(e);
-    }
-  };
+      $("btnStart").onclick = async () => {
+        $("btnStart").disabled = true;
+        $("sessionInfo").textContent = "starting...";
+        try {
+          const data = await postJson("/api/start", {});
+          sessionId = data.session_id;
+          l1Target = data.layer1_target;
 
-  function playBeep() {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = 880;
-    gain.gain.value = 0.08;
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    setTimeout(() => { osc.stop(); ctx.close(); }, 120);
-  }
+          setText("sessionInfo", `session_id=${sessionId}  ttl=${data.session_expires_in}s`);
+          show("layer1Card");
+          hide("layer2Card");
+          hide("layer35Card");
+          hide("finalCard");
 
-  $("btnArmBeep").onclick = async () => {
-    $("btnArmBeep").disabled = true;
-    $("btnNow").disabled = false;
-    $("l2Out").textContent = "Armed. Wait for beep...";
-    l2.armed = true;
-    l2.armedAtPerf = performance.now();
+          // reset L1
+          l1Start = performance.now();
+          moveCount = 0;
+          l1Submitted = false;
 
-    // schedule beep
-    setText("l2Timer", `beep in ~${l2.beepAt}ms`);
-    setTimeout(() => {
-      if (!l2.armed) return;
-      l2.beepPerf = performance.now();
-      playBeep();
-      setText("l2Timer", "BEEP!");
-    }, l2.beepAt);
-  };
+          setText("targetVal", l1Target);
+          $("l1Out").textContent = "";
+          $("vol").value = 50;
+          setText("volVal", "50");
+          $("btnL1Submit").disabled = false;
 
-  $("btnNow").onclick = async () => {
-    if (!l2.armed) return;
-    l2.armed = false;
-    $("btnNow").disabled = true;
+        } catch (e) {
+          $("sessionInfo").textContent = "start failed";
+          console.error(e);
+          $("btnStart").disabled = false;
+        }
+      };
 
-    const clickPerf = performance.now();
-    const clickAtMs = Math.round(clickPerf - l2.armedAtPerf);
-    const heardAtMs = l2.beepPerf ? Math.round(l2.beepPerf - l2.armedAtPerf) : null;
-
-    try {
-      const data = await postJson(`/api/${sessionId}/layer2/beep`, {
-        nonce: l2.nonce,
-        heard_at_ms: heardAtMs ?? -1,
-        click_at_ms: clickAtMs
+      $("vol").addEventListener("input", () => {
+        setText("volVal", $("vol").value);
+        if (!l1Submitted) moveCount++;
       });
 
-      if (data.passed) {
-        $("l2Out").innerHTML = `<span class="ok">Passed</span> (delta=${data.delta_ms}ms, tol=${data.tolerance_ms}ms)`;
-        // enable finalize if l35 not required
-        show("finalCard");
-        if (!l35.enabled) {
-          $("btnFinalize").disabled = false;
-        } else {
-          $("btnFinalize").disabled = true;
-        }
-      } else {
-        $("l2Out").innerHTML = `<span class="bad">Failed</span> (${data.reason || "unknown"}, delta=${data.delta_ms}ms)`;
-      }
-    } catch (e) {
-      $("l2Out").innerHTML = `<span class="bad">Layer2 error:</span> ${JSON.stringify(e.data)}`;
-      console.error(e);
-    }
-  };
+      $("btnL1Submit").onclick = async () => {
+        if (l1Submitted) return;
+        l1Submitted = true;
+        $("btnL1Submit").disabled = true;
 
-  $("btnShowPhrase").onclick = () => {
-    if (!l35.enabled) return;
-    const words = l35.words;
-    if (!words) return;
+        const timeMs = Math.round(performance.now() - l1Start);
+        const payload = {
+          time_ms: timeMs,
+          final_val: parseInt($("vol").value, 10),
+          target_val: l1Target,
+          moves: moveCount
+        };
 
-    $("btnShowPhrase").disabled = true;
-    const phrase = words.join(" ");
-    setText("phraseFlash", phrase);
-
-    setTimeout(() => {
-      setText("phraseFlash", "•••");
-      $("btnStartSpeech").disabled = false;
-    }, 2000);
-  };
-
-  $("btnStartSpeech").onclick = async () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      $("l35Out").innerHTML = `<span class="bad">SpeechRecognition not supported in this browser.</span>`;
-      return;
-    }
-
-    $("btnStartSpeech").disabled = true;
-    $("l35Out").textContent = "Listening... (say the 2-word phrase)";
-
-    const rec = new SpeechRecognition();
-    rec.lang = "en-US";
-    rec.interimResults = false;
-    rec.maxAlternatives = 1;
-
-    rec.onresult = async (evt) => {
-      const transcript = evt.results[0][0].transcript;
-      try {
-        const data = await postJson(`/api/${sessionId}/layer35/speech`, {
-          nonce: l35.nonce,
-          transcript
-        });
-
-        if (data.passed) {
-          $("l35Out").innerHTML = `<span class="ok">Passed</span> (heard: "${transcript}")`;
-          // now allow finalize
-          show("finalCard");
-          $("btnFinalize").disabled = false;
-        } else {
-          $("l35Out").innerHTML = `<span class="bad">Failed</span> (heard: "${transcript}") expected words: ${data.expected.join(" ")}`;
-        }
-      } catch (e) {
-        $("l35Out").innerHTML = `<span class="bad">Layer3.5 error:</span> ${JSON.stringify(e.data)}`;
-      }
-    };
-
-    rec.onerror = (e) => {
-      $("l35Out").innerHTML = `<span class="bad">Speech error:</span> ${e.error}`;
-      $("btnStartSpeech").disabled = false;
-    };
-
-    rec.onend = () => {
-      // If user didn't speak, allow retry
-      if ($("btnFinalize").disabled) $("btnStartSpeech").disabled = false;
-    };
-
-    rec.start();
-  };
-
-  $("btnFinalize").onclick = async () => {
-    $("btnFinalize").disabled = true;
-    try {
-      const data = await postJson(`/api/${sessionId}/finalize`, {});
-      const token = data.token;
-
-      $("tokenOut").innerHTML =
-        `<div><span class="ok">✅ Token issued</span> (expires in ${data.expires_in}s)</div>` +
-        `<div class="mono" style="word-break:break-all; margin-top:8px;">${token}</div>`;
-
-      $("btnConsume1").disabled = false;
-      $("btnConsume2").disabled = true;
-
-      $("btnConsume1").onclick = async () => {
         try {
-          const res = await fetch(`/api/consume?token=${encodeURIComponent(token)}`, { method: "POST" });
-          const j = await res.json();
-          if (res.ok) {
-            $("consumeOut").innerHTML = `<span class="ok">1st consume ok</span>: ${JSON.stringify(j)}`;
-            $("btnConsume2").disabled = false;
-            $("btnConsume1").disabled = true;
+          const data = await postJson(`/api/${sessionId}/layer1`, payload);
+
+          const risk = data.risk;
+          $("l1Out").innerHTML =
+            `Risk: <span class="pill">${risk.label}</span> (score=${risk.score.toFixed(2)}) &nbsp; ` +
+            `Strictness: <span class="pill">${data.strictness}</span>`;
+
+          // prepare layer2
+          l2.nonce = data.layer2.nonce;
+          l2.beepAt = data.layer2.params.beep_at_ms;
+          l2.tol = data.layer2.params.tolerance_ms;
+          l2.armed = false;
+          l2.clickAt = null;
+          l2.beepPerf = null;
+          l2.armedAtPerf = null;
+
+          $("l2Out").textContent = `Server tolerance: ±${l2.tol}ms.`;
+          $("btnArmBeep").disabled = false;
+          $("btnNow").disabled = true;
+          setText("l2Timer", "");
+          show("layer2Card");
+
+          // layer3.5 toggle
+          l35.enabled = data.layer35.enabled;
+          l35.nonce = data.layer35.nonce;
+          l35.words = data.layer35.words;
+
+          if (l35.enabled) {
+            show("layer35Card");
+            $("l35Out").textContent = "Phrase challenge is enabled due to risk/strictness.";
+            $("btnShowPhrase").disabled = false;
+            $("btnStartSpeech").disabled = true;
+            setText("phraseFlash", "•••");
           } else {
-            $("consumeOut").innerHTML = `<span class="bad">Consume failed</span>: ${JSON.stringify(j)}`;
+            hide("layer35Card");
           }
+
         } catch (e) {
-          $("consumeOut").innerHTML = `<span class="bad">Consume error</span>`;
+          $("l1Out").innerHTML = `<span class="bad">Layer1 failed:</span> ${JSON.stringify(e.data)}`;
+          console.error(e);
         }
       };
 
-      $("btnConsume2").onclick = async () => {
+      function playBeep() {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = 880;
+        gain.gain.value = 0.08;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        setTimeout(() => { osc.stop(); ctx.close(); }, 120);
+      }
+
+      $("btnArmBeep").onclick = async () => {
+        $("btnArmBeep").disabled = true;
+        $("btnNow").disabled = false;
+        $("l2Out").textContent = "Armed. Wait for beep...";
+        l2.armed = true;
+        l2.armedAtPerf = performance.now();
+
+        // schedule beep
+        setText("l2Timer", `beep in ~${l2.beepAt}ms`);
+        setTimeout(() => {
+          if (!l2.armed) return;
+          l2.beepPerf = performance.now();
+          playBeep();
+          setText("l2Timer", "BEEP!");
+        }, l2.beepAt);
+      };
+
+      $("btnNow").onclick = async () => {
+        if (!l2.armed) return;
+        l2.armed = false;
+        $("btnNow").disabled = true;
+
+        const clickPerf = performance.now();
+        const clickAtMs = Math.round(clickPerf - l2.armedAtPerf);
+        const heardAtMs = l2.beepPerf ? Math.round(l2.beepPerf - l2.armedAtPerf) : null;
+
         try {
-          const res = await fetch(`/api/consume?token=${encodeURIComponent(token)}`, { method: "POST" });
-          const j = await res.json();
-          if (res.ok) {
-            $("consumeOut").innerHTML = `<span class="bad">Replay unexpectedly succeeded</span>: ${JSON.stringify(j)}`;
+          const data = await postJson(`/api/${sessionId}/layer2/beep`, {
+            nonce: l2.nonce,
+            heard_at_ms: heardAtMs ?? -1,
+            click_at_ms: clickAtMs
+          });
+
+          if (data.passed) {
+            $("l2Out").innerHTML = `<span class="ok">Passed</span> (delta=${data.delta_ms}ms, tol=${data.tolerance_ms}ms)`;
+            show("finalCard");
+            if (!l35.enabled) {
+              $("btnFinalize").disabled = false;
+            } else {
+              $("btnFinalize").disabled = true;
+            }
           } else {
-            $("consumeOut").innerHTML = `<span class="ok">Replay blocked</span>: ${JSON.stringify(j)}`;
+            $("l2Out").innerHTML = `<span class="bad">Failed</span> (${data.reason || "unknown"}, delta=${data.delta_ms}ms)`;
           }
+        } catch (e) {
+          $("l2Out").innerHTML = `<span class="bad">Layer2 error:</span> ${JSON.stringify(e.data)}`;
+          console.error(e);
+        }
+      };
+
+      $("btnShowPhrase").onclick = () => {
+        if (!l35.enabled) return;
+        const words = l35.words;
+        if (!words) return;
+
+        $("btnShowPhrase").disabled = true;
+        const phrase = words.join(" ");
+        setText("phraseFlash", phrase);
+
+        setTimeout(() => {
+          setText("phraseFlash", "•••");
+          $("btnStartSpeech").disabled = false;
+        }, 2000);
+      };
+
+      $("btnStartSpeech").onclick = async () => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          $("l35Out").innerHTML = `<span class="bad">SpeechRecognition not supported in this browser.</span>`;
+          return;
+        }
+
+        $("btnStartSpeech").disabled = true;
+        $("l35Out").textContent = "Listening... (say the 2-word phrase)";
+
+        const rec = new SpeechRecognition();
+        rec.lang = "en-US";
+        rec.interimResults = false;
+        rec.maxAlternatives = 1;
+
+        rec.onresult = async (evt) => {
+          const transcript = evt.results[0][0].transcript;
+          try {
+            const data = await postJson(`/api/${sessionId}/layer35/speech`, {
+              nonce: l35.nonce,
+              transcript
+            });
+
+            if (data.passed) {
+              $("l35Out").innerHTML = `<span class="ok">Passed</span> (heard: "${transcript}")`;
+              show("finalCard");
+              $("btnFinalize").disabled = false;
+            } else {
+              $("l35Out").innerHTML = `<span class="bad">Failed</span> (heard: "${transcript}") expected words: ${data.expected.join(" ")}`;
+            }
+          } catch (e) {
+            $("l35Out").innerHTML = `<span class="bad">Layer3.5 error:</span> ${JSON.stringify(e.data)}`;
+          }
+        };
+
+        rec.onerror = (e) => {
+          $("l35Out").innerHTML = `<span class="bad">Speech error:</span> ${e.error}`;
+          $("btnStartSpeech").disabled = false;
+        };
+
+        rec.onend = () => {
+          if ($("btnFinalize").disabled) $("btnStartSpeech").disabled = false;
+        };
+
+        rec.start();
+      };
+
+      $("btnFinalize").onclick = async () => {
+        $("btnFinalize").disabled = true;
+        try {
+          const data = await postJson(`/api/${sessionId}/finalize`, {});
+          const token = data.token;
+
+          $("tokenOut").innerHTML =
+            `<div><span class="ok">Token issued</span> (expires in ${data.expires_in}s)</div>` +
+            `<div class="mono">${token}</div>`;
+
+          $("btnConsume1").disabled = false;
           $("btnConsume2").disabled = true;
+
+          $("btnConsume1").onclick = async () => {
+            try {
+              const res = await fetch(`/api/consume?token=${encodeURIComponent(token)}`, { method: "POST" });
+              const j = await res.json();
+              if (res.ok) {
+                $("consumeOut").innerHTML = `<span class="ok">1st consume ok</span>: ${JSON.stringify(j)}`;
+                $("btnConsume2").disabled = false;
+                $("btnConsume1").disabled = true;
+              } else {
+                $("consumeOut").innerHTML = `<span class="bad">Consume failed</span>: ${JSON.stringify(j)}`;
+              }
+            } catch (e) {
+              $("consumeOut").innerHTML = `<span class="bad">Consume error</span>`;
+            }
+          };
+
+          $("btnConsume2").onclick = async () => {
+            try {
+              const res = await fetch(`/api/consume?token=${encodeURIComponent(token)}`, { method: "POST" });
+              const j = await res.json();
+              if (res.ok) {
+                $("consumeOut").innerHTML = `<span class="bad">Replay unexpectedly succeeded</span>: ${JSON.stringify(j)}`;
+              } else {
+                $("consumeOut").innerHTML = `<span class="ok">Replay blocked</span>: ${JSON.stringify(j)}`;
+              }
+              $("btnConsume2").disabled = true;
+            } catch (e) {
+              $("consumeOut").innerHTML = `<span class="bad">Replay error</span>`;
+            }
+          };
+
         } catch (e) {
-          $("consumeOut").innerHTML = `<span class="bad">Replay error</span>`;
+          $("tokenOut").innerHTML = `<span class="bad">Finalize failed:</span> ${JSON.stringify(e.data)}`;
+          $("btnFinalize").disabled = false;
         }
       };
+    </script>
 
-    } catch (e) {
-      $("tokenOut").innerHTML = `<span class="bad">Finalize failed:</span> ${JSON.stringify(e.data)}`;
-      $("btnFinalize").disabled = false;
-    }
-  };
-</script>
+    <!-- Matrix rain JS (background only; does not touch your logic) -->
+    <script>
+      const canvas = document.getElementById('matrix-bg');
+      const ctx = canvas.getContext('2d');
 
+      function fit() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      fit();
+
+      const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+      const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const nums = '0123456789';
+      const alphabet = katakana + latin + nums;
+
+      const fontSize = 16;
+      let columns = Math.floor(canvas.width / fontSize);
+      let rainDrops = Array(columns).fill(1);
+
+      function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#0F0';
+        ctx.font = fontSize + 'px monospace';
+
+        for (let i = 0; i < rainDrops.length; i++) {
+          const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+          ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+          if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+            rainDrops[i] = 0;
+          }
+          rainDrops[i]++;
+        }
+      }
+
+      setInterval(drawMatrix, 30);
+
+      window.addEventListener('resize', () => {
+        fit();
+        columns = Math.floor(canvas.width / fontSize);
+        rainDrops = Array(columns).fill(1);
+      });
+    </script>
+  </div>
 </body>
 </html>

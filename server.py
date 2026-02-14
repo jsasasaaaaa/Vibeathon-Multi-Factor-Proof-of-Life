@@ -217,7 +217,7 @@ def start(req: Request):
             "mode": layer2_mode,
             "params": layer2_params,
             "nonce": nonce,
-            "expires_at": 0,
+            "expires_at": now() + CHALLENGE_TTL_SEC,
             "used": False,
             "passed": False,
         },
@@ -281,10 +281,6 @@ def submit_layer1(session_id: str, payload: Layer1Submit, req: Request):
         s["strictness"] = "strict"
         s["layer2"]["params"]["tolerance_ms"] = 300
         s["layer35"]["enabled"] = True
-
-    s["layer2"]["expires_at"] = now() + CHALLENGE_TTL_SEC
-    s["layer2"]["used"] = False
-    s["layer2"]["passed"] = False
 
     return {
         "risk": s["layer1"]["risk"],
