@@ -1,0 +1,8 @@
+{
+  "name": "BioGuard Proof-of-Life MFA",
+  "description": "A high-security biometric verification system using Gemini AI to validate human presence through dynamic visual challenges and micro-emotion analysis.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
